@@ -1,0 +1,50 @@
+{
+  "name": "dsh-tier-boost",
+  "version": "1.0.0",
+  "description": "DeepSeek 六档推理等级（low/medium/high/xhigh/max/ultra）：接管 deepseek-account 适配器，把右下角菜单从四档扩到六档；max/ultra 两档额外注入强化流程与 Agent Team 行为块。",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "reasoning-effort",
+    "tier",
+    "deepseek",
+    "agent-team",
+    "adapter"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "license": "MIT",
+  "author": "StarflowDream",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StarflowDream/dsh-tier-boost.git"
+  },
+  "homepage": "https://github.com/StarflowDream/dsh-tier-boost#readme",
+  "bugs": {
+    "url": "https://github.com/StarflowDream/dsh-tier-boost/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*"
+  }
+}

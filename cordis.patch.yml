@@ -1,0 +1,49 @@
+# dsh-tier-boost 的合并补丁。
+#
+# 内置的 deepseek-account 适配器把推理档位硬编码成 off/low/high/max 四项
+# （dsh-llm-deepseek/lib/index.js 的 modelInfo()），没有任何配置项能扩展它；
+# 而右下角菜单只显示适配器 advertise 的档位，所以扩档只能改写适配器实例。
+#
+# 三种运行方式（本行 config.mode）：
+#
+#   declare（默认，推荐）：不注册任何适配器，只在启动时把**内置** deepseek-account
+#     适配器实例的 resolveModel / prepareCall / stream 包一层：advertise 六档，
+#     出网前把六档翻译回内置四档。不改注册关系 ⇒ 既不会撞
+#     @deepseek-ai/dsh-llm 的 DUPLICATE_ADAPTER，也不会出现
+#     「内置行已停用、本插件还没注册上」的启动窗口（NO_ADAPTER 的来源）。
+#     内置行必须保持启用。
+#
+#   own：用自己的 provider 名（默认 deepseek-account-tier）注册六档适配器，
+#     内置四档行原样保留、菜单里会多出第二个条目。用于先证明"档位能 advertise"。
+#
+#   takeover：用内置原名注册，必须同时把内置行按 id 停用（disabled: true），
+#     否则同名注册会抛 DUPLICATE_ADAPTER；代价是有启动窗口（见上）。
+#
+# 线上值仍是 off/low/high/max：low→off、medium→low、high→high、xhigh/max/ultra→max。
+
+- insert:
+    - id: llm-deepseek-account-tier
+      name: 'dsh-tier-boost'
+      config:
+        mode: declare
+        # 逐模型档位覆写（规则与契约见 lib/overrides.js）。全局档位只有一个值，撞上
+        # "档位表里没有它"的模型时宿主会抛 UNSUPPORTED_REASONING_EFFORT，**整轮跑不起来**。
+        #
+        # qodercn/qfmodel（Qwen3.8-Flash）advertise 的是 ["xhigh","low","medium"]，**没有 high**：
+        # meow-memory 的反思/梦境轮把 provider/model 换成 qodercn/qfmodel 时会继承全局 high
+        # （agent-default-model.reasoningEffort），于是整轮炸掉。
+        # ⚠️ 规则是**顺序即优先级**、取第一条命中的；要加"某 provider 下所有模型"就只写 provider。
+        # when: memory-turn = 只作用在记忆任务轮（靠 meow-memory emit 的 [meow-memory-reflect]/
+        # [meow-memory-dream] 标记识别）；不写 when 就是 always。
+        effortOverrides:
+          # 记忆整理是"读历史 → 写条目"的机械活，不需要高思考档（2026-10-09 用户嫌 xhigh 慢；
+          # 先落地 low，同日用户又说「改成 medium 吧，我感觉太低也不好」→ 现为 medium）。
+          - provider: qodercn
+            model: qfmodel
+            effort: medium
+            when: memory-turn
+          # 兜底：标记没识别出来时也不能继承全局 high（qfmodel 没这个档位，会整轮抛
+          # UNSUPPORTED_REASONING_EFFORT）。
+          - provider: qodercn
+            model: qfmodel
+            effort: xhigh

@@ -1,5 +1,37 @@
 # Changelog
 
+## dsh-tier-boost v1.1.0 — 2026-10-13
+
+### 档位可以叠加多个行为块
+
+- `TIERS[].block` 从单值改成**数组**：一档可以挂多块（`['methods']` / `['methods','methodsDeep']` /
+  `['methods','methodsDeep','team']`）。
+- `BLOCK_KEYS` 现在是五种：`methods` / `methodsDeep` / `team` / `teamOff` / `teammate`；
+  `blocks`（内联覆盖）与 `blockDir`（`<key>.md`）跟着支持五种键，内联优先、缺的键留默认。
+- `teamOff` 块里的 `{maxLive}` 渲染成该档的并发上限；`renderBlock()` 只替换这一个占位符，
+  正文里其他花括号（JSON 示例、模板）原样留着。
+
+### low / medium 档不再能派子代理
+
+- 新增 `NO_DELEGATION_TIERS`（出厂 `low`、`medium`）：这两档的工具表里**直接滤掉**
+  团队工具与单发子代理工具（`hiddenToolsFor()`）。
+- 另加一层 `tools.guard`（`delegationGate`）：工具万一被别处放出来，这两档的调用也会被拒，
+  并给出可读原因——两层是双保险，互不依赖。
+- 其余档的单发子代理并发上限逐档为 1 / 2 / 3 / 4 / 6 / 8（`TEAM_POLICY`）。
+
+### 六档说明文案
+
+- `TIERS[].description` 补齐：档位选择器里每行写清"用途 + 容量"
+  （例：High = 标准思考 · 改代码、查根因、写脚本（日常默认），子代理 ≤3）。
+  文案仍写在档位表里，改它只动 `lib/policy.js` 一处。
+
+### 验证
+
+- 三条判据全绿：`checks/tier-boost-policy.check.mjs`（表自洽与标记行为）、
+  `checks/tier-boost-generic.check.mjs`（覆盖通道 / 身份派生 / 作用域泛化）、
+  `checks/tier-boost-package.check.mjs`（发布件形状）；元判据
+  `checks/discrimination.check.mjs` 给前两条各留了"坏样本必须报红"的用例。
+
 ## dsh-tier-boost v1.0.0 — 2026-10-11
 
 第一次公开：从"只在本机 plugins-src + profile/node_modules 里活着"变成可安装、可给别人用的包。
